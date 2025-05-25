@@ -1,0 +1,62 @@
+-- Table des utilisateurs
+CREATE TABLE IF NOT EXISTS Users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table des clients
+CREATE TABLE IF NOT EXISTS clients (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    secteur_activite VARCHAR(100),
+    objectif TEXT,
+    budget NUMERIC,
+    public_cible TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table des stratégies
+CREATE TABLE IF NOT EXISTS strategies (
+    id SERIAL PRIMARY KEY,
+    client_id INT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    titre VARCHAR(150),
+    description TEXT,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    statut VARCHAR(50) DEFAULT 'en attente' CHECK (statut IN ('en attente', 'en cours', 'terminée'))
+);
+
+-- Table des actions stratégiques
+CREATE TABLE IF NOT EXISTS actions_strategiques (
+    id SERIAL PRIMARY KEY,
+    strategy_id INT NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
+    type_action VARCHAR(100),
+    frequence VARCHAR(50),
+    canal VARCHAR(100),
+    budget_estime NUMERIC,
+    note TEXT,
+    est_faite VARCHAR(3) CHECK (est_faite IN ('oui', 'non'));
+);
+
+
+-- Table des posts
+CREATE TABLE IF NOT EXISTS Posts (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    platform VARCHAR(50) NOT NULL CHECK (platform IN ('facebook', 'instagram', 'linkedin')),
+    scheduled_at TIMESTAMP NOT NULL,
+    user_id INT NOT NULL REFERENCES Users(id),
+    client_id INT REFERENCES clients(id),
+    strategy_id INT REFERENCES strategies(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index pour améliorer les performances
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON Posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_scheduled_at ON Posts(scheduled_at);
